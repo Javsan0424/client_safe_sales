@@ -13,7 +13,7 @@ export default function Home() {
     setLoading(true); 
 
     try {
-      const response = await fetch("serversafesales-production.up.railway.app/api/login", {
+      const response = await fetch("https://serversafesales-production.up.railway.app/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

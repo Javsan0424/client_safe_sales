@@ -27,7 +27,7 @@ export default function Productos() {
     const fetchProductos = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('serversafesales-production.up.railway.app/api/productos');
+            const response = await axios.get('https://serversafesales-production.up.railway.app/api/productos');
             
             if (Array.isArray(response.data)) {
                 setProductos(response.data);
@@ -60,9 +60,9 @@ export default function Productos() {
         setIsLoading(true);
         try {
             if (isEditing && currentProducto.Producto_ID) {
-                await axios.put(`serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`, currentProducto);
+                await axios.put(`https://serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`, currentProducto);
             } else {
-                await axios.post('serversafesales-production.up.railway.app/api/productos', currentProducto);
+                await axios.post('https://serversafesales-production.up.railway.app/api/productos', currentProducto);
             }
             setShowModal(false);
             setError(null);
@@ -82,7 +82,7 @@ export default function Productos() {
 
         setIsLoading(true);
         try {
-            await axios.delete(`serversafesales-production.up.railway.app/api/productos/${id}`);
+            await axios.delete(`https://serversafesales-production.up.railway.app/api/productos/${id}`);
             setProductos(productos.filter(producto => producto.Producto_ID !== id));
             setError(null);
         } catch (error) {

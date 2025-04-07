@@ -28,7 +28,7 @@ export default function Empresas() {
     const fetchEmpresas = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:3001/api/empresas');
+            const response = await axios.get('https://serversafesales-production.up.railway.app/api/empresas');
             console.log("Datos recibidos:", response.data);
 
             if (Array.isArray(response.data)) {
@@ -55,7 +55,7 @@ export default function Empresas() {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:3001/api/empresas', newEmpresa);
+            const response = await axios.post('https://serversafesales-production.up.railway.app/api/empresas', newEmpresa);
             setEmpresas([...empresas, response.data]);
             setNewEmpresa({ Nombre: '', Numero: '', Direccion: '' });
             setShowAddModal(false);
@@ -75,7 +75,7 @@ export default function Empresas() {
 
         setIsLoading(true);
         try {
-            await axios.delete(`http://localhost:3001/api/empresas/${id}`);
+            await axios.delete(`https://serversafesales-production.up.railway.app/api/empresas/${id}`);
             setEmpresas(empresas.filter(empresa => empresa.Empresas_ID !== id));
             setError(null);
         } catch (error) {
@@ -152,7 +152,6 @@ export default function Empresas() {
                     </div>
                 )}
 
-                {/* Add Empresa Modal */}
                 {showAddModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg p-6 w-full max-w-md">

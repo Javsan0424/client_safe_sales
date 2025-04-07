@@ -29,7 +29,7 @@ export default function Negociaciones() {
     const fetchNegociaciones = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get("serversafesales-production.up.railway.app/api/negociaciones");
+            const response = await axios.get("https://serversafesales-production.up.railway.app/api/negociaciones");
             if (Array.isArray(response.data)) {
                 setNegociaciones(response.data);
             } else {
@@ -46,7 +46,7 @@ export default function Negociaciones() {
 
     const fetchClientes = async () => {
         try {
-            const response = await axios.get("serversafesales-production.up.railway.app/api/clientes");
+            const response = await axios.get("https://serversafesales-production.up.railway.app/api/clientes");
             setClientes(response.data);
         } catch (error) {
             console.error("Error obteniendo clientes:", error);
@@ -83,7 +83,7 @@ export default function Negociaciones() {
         setIsLoading(true);
         try {
             await axios.put(
-                `serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
+                `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
                 updatedNegociacion
             );
             

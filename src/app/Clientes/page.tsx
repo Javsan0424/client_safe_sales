@@ -37,7 +37,7 @@ export default function Clientes() {
     const fetchClientes = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('serversafesales-production.up.railway.app/api/clientes');
+            const response = await axios.get('https://serversafesales-production.up.railway.app/api/clientes');
             
             if (Array.isArray(response.data)) {
                 setClientes(response.data);
@@ -57,7 +57,7 @@ export default function Clientes() {
 
     const fetchEmpresas = async () => {
         try {
-            const response = await axios.get('serversafesales-production.up.railway.app/api/empresas');
+            const response = await axios.get('https://serversafesales-production.up.railway.app/api/empresas');
             setEmpresas(response.data);
         } catch (error) {
             console.error("Error obteniendo empresas:", error);
@@ -77,7 +77,7 @@ export default function Clientes() {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('serversafesales-production.up.railway.app/api/clientes', newCliente);
+            const response = await axios.post('https://serversafesales-production.up.railway.app/api/clientes', newCliente);
             setClientes([...clientes, response.data]);
             setNewCliente({ 
                 Nombre: '', 
@@ -102,7 +102,7 @@ export default function Clientes() {
 
         setIsLoading(true);
         try {
-            const response = await axios.delete(`serversafesales-production.up.railway.app/api/clientes/${id}`);
+            const response = await axios.delete(`https://serversafesales-production.up.railway.app/api/clientes/${id}`);
             
             if (response.status === 200) {
                 setClientes(clientes.filter(cliente => cliente.Cliente_ID !== id));
@@ -198,7 +198,7 @@ export default function Clientes() {
                     </div>
                 )}
 
-                {/* Add Cliente Modal */}
+                
                 {showAddModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg p-6 w-full max-w-md">

@@ -25,17 +25,16 @@ export default function Tablero() {
   const [userInput, setUserInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
 
-  // API Key para Gemini 1.0 Pro (modelo gratuito)
   const API_KEY = "AIzaSyB7No1LofBlyTlXwp-peScPfG6pITUOwOI";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const responseEmpresas = await axios.get("serversafesales-production.up.railway.app/api/empresas");
-        const responseClientes = await axios.get("serversafesales-production.up.railway.app/api/clientes");
-        const responseVentas = await axios.get("serversafesales-production.up.railway.app/api/ventas");
-        const responseProductos = await axios.get("serversafesales-production.up.railway.app/api/productos");
-        const responseNegociaciones = await axios.get("serversafesales-production.up.railway.app/api/negociaciones");
+        const responseEmpresas = await axios.get("https://serversafesales-production.up.railway.app/api/empresas");
+        const responseClientes = await axios.get("https://serversafesales-production.up.railway.app/api/clientes");
+        const responseVentas = await axios.get("https://serversafesales-production.up.railway.app/api/ventas");
+        const responseProductos = await axios.get("https://serversafesales-production.up.railway.app/api/productos");
+        const responseNegociaciones = await axios.get("https://serversafesales-production.up.railway.app/api/negociaciones");
 
         setEmpresasSummary({
           title: "Empresas",
