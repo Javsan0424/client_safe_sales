@@ -48,7 +48,7 @@ export default function Ventas() {
     const fetchVentas = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:3001/api/ventas');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/ventas');
             
             if (Array.isArray(response.data)) {
                 setVentas(response.data);
@@ -66,7 +66,7 @@ export default function Ventas() {
 
     const fetchClientes = async () => {
         try {
-            const response = await axios.get('http://localhost:3001/api/clientes');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/clientes');
             setClientes(response.data);
         } catch (error) {
             console.error("Error obteniendo clientes:", error);
@@ -75,7 +75,7 @@ export default function Ventas() {
 
     const fetchProductos = async () => {
         try {
-            const response = await axios.get('http://localhost:3001/api/productos');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/productos');
             setProductos(response.data);
         } catch (error) {
             console.error("Error obteniendo productos:", error);
@@ -101,9 +101,9 @@ export default function Ventas() {
         setIsLoading(true);
         try {
             if (isEditing && currentVenta.Ventas_ID) {
-                await axios.put(`http://localhost:3001/api/ventas/${currentVenta.Ventas_ID}`, currentVenta);
+                await axios.put(`serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`, currentVenta);
             } else {
-                await axios.post('http://localhost:3001/api/ventas', currentVenta);
+                await axios.post('serversafesales-production.up.railway.app/api/ventas', currentVenta);
             }
             setShowModal(false);
             setError(null);
@@ -123,7 +123,7 @@ export default function Ventas() {
 
         setIsLoading(true);
         try {
-            await axios.delete(`http://localhost:3001/api/ventas/${id}`);
+            await axios.delete(`serversafesales-production.up.railway.app/api/ventas/${id}`);
             setVentas(ventas.filter(venta => venta.Ventas_ID !== id));
             setError(null);
         } catch (error) {
@@ -246,7 +246,6 @@ export default function Ventas() {
                     </div>
                 )}
 
-                {/* Modal para agregar/editar venta */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg p-6 w-full max-w-md">

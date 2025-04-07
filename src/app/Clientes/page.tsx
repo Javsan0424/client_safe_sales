@@ -37,7 +37,7 @@ export default function Clientes() {
     const fetchClientes = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:3001/api/clientes');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/clientes');
             
             if (Array.isArray(response.data)) {
                 setClientes(response.data);
@@ -57,7 +57,7 @@ export default function Clientes() {
 
     const fetchEmpresas = async () => {
         try {
-            const response = await axios.get('http://localhost:3001/api/empresas');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/empresas');
             setEmpresas(response.data);
         } catch (error) {
             console.error("Error obteniendo empresas:", error);
@@ -77,7 +77,7 @@ export default function Clientes() {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:3001/api/clientes', newCliente);
+            const response = await axios.post('serversafesales-production.up.railway.app/api/clientes', newCliente);
             setClientes([...clientes, response.data]);
             setNewCliente({ 
                 Nombre: '', 
@@ -102,7 +102,7 @@ export default function Clientes() {
 
         setIsLoading(true);
         try {
-            const response = await axios.delete(`http://localhost:3001/api/clientes/${id}`);
+            const response = await axios.delete(`serversafesales-production.up.railway.app/api/clientes/${id}`);
             
             if (response.status === 200) {
                 setClientes(clientes.filter(cliente => cliente.Cliente_ID !== id));

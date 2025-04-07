@@ -31,11 +31,11 @@ export default function Tablero() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const responseEmpresas = await axios.get("http://localhost:3001/api/empresas");
-        const responseClientes = await axios.get("http://localhost:3001/api/clientes");
-        const responseVentas = await axios.get("http://localhost:3001/api/ventas");
-        const responseProductos = await axios.get("http://localhost:3001/api/productos");
-        const responseNegociaciones = await axios.get("http://localhost:3001/api/negociaciones");
+        const responseEmpresas = await axios.get("serversafesales-production.up.railway.app/api/empresas");
+        const responseClientes = await axios.get("serversafesales-production.up.railway.app/api/clientes");
+        const responseVentas = await axios.get("serversafesales-production.up.railway.app/api/ventas");
+        const responseProductos = await axios.get("serversafesales-production.up.railway.app/api/productos");
+        const responseNegociaciones = await axios.get("serversafesales-production.up.railway.app/api/negociaciones");
 
         setEmpresasSummary({
           title: "Empresas",
@@ -176,7 +176,6 @@ export default function Tablero() {
           )}
         </div>
 
-        {/* Botón flotante para el chat */}
         <button
           onClick={() => setShowChat(!showChat)}
           className="fixed bottom-6 right-6 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors z-50"
@@ -193,7 +192,6 @@ export default function Tablero() {
           )}
         </button>
 
-        {/* Componente de chat */}
         {showChat && (
           <div className="fixed bottom-20 right-6 w-80 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col z-50">
             <div className="bg-blue-500 text-white p-3 rounded-t-lg flex justify-between items-center">

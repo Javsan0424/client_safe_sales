@@ -27,7 +27,7 @@ export default function Productos() {
     const fetchProductos = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:3001/api/productos');
+            const response = await axios.get('serversafesales-production.up.railway.app/api/productos');
             
             if (Array.isArray(response.data)) {
                 setProductos(response.data);
@@ -60,11 +60,9 @@ export default function Productos() {
         setIsLoading(true);
         try {
             if (isEditing && currentProducto.Producto_ID) {
-                // Actualizar producto existente
-                await axios.put(`http://localhost:3001/api/productos/${currentProducto.Producto_ID}`, currentProducto);
+                await axios.put(`serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`, currentProducto);
             } else {
-                // Crear nuevo producto
-                await axios.post('http://localhost:3001/api/productos', currentProducto);
+                await axios.post('serversafesales-production.up.railway.app/api/productos', currentProducto);
             }
             setShowModal(false);
             setError(null);
@@ -84,7 +82,7 @@ export default function Productos() {
 
         setIsLoading(true);
         try {
-            await axios.delete(`http://localhost:3001/api/productos/${id}`);
+            await axios.delete(`serversafesales-production.up.railway.app/api/productos/${id}`);
             setProductos(productos.filter(producto => producto.Producto_ID !== id));
             setError(null);
         } catch (error) {
@@ -187,7 +185,6 @@ export default function Productos() {
                     </div>
                 )}
 
-                {/* Modal para agregar/editar producto */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg p-6 w-full max-w-md">
