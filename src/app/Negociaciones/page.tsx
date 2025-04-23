@@ -81,14 +81,15 @@ export default function Negociaciones() {
     e.preventDefault();
     if (!draggedItem) return;
   
-    // Don't update if status hasn't changed
+    // Early return if status hasn't changed
     if (draggedItem.Estatus === newStatus) {
       setDraggedItem(null);
       return;
     }
   
-    // Prepare the updated negotiation data
-    const updateData = {
+    // Prepare the update payload
+    const payload = {
+      ID_Negociaciones: draggedItem.ID_Negociaciones,
       Cliente_ID: draggedItem.Cliente_ID,
       Fecha_Inicio: draggedItem.Fecha_Inicio,
       Fecha_Cierre: ["Terminado", "Cancelado"].includes(newStatus) 
@@ -97,53 +98,67 @@ export default function Negociaciones() {
       Estatus: newStatus
     };
   
+    console.log("Sending update payload:", payload); // Debug log
+  
     setLoading(prev => ({...prev, drag: true}));
-    
+  
     try {
       const response = await axios.put(
         `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
-        updateData,
+        payload,
         {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         }
       );
   
-      if (response.data.success) {
-        // Update local state only after successful API response
+      console.log("Update response:", response.data); // Debug log
+  
+      if (response.data && response.data.success) {
         setNegociaciones(prev => 
           prev.map(n => 
             n.ID_Negociaciones === draggedItem.ID_Negociaciones 
-              ? { ...n, ...updateData }
+              ? { ...n, ...payload }
               : n
           )
         );
       } else {
-        throw new Error(response.data.message || "Error en la respuesta del servidor");
+        throw new Error(response.data?.message || "Invalid server response");
       }
     } catch (error) {
+      console.error("Full error object:", error); // Debug log
+      
       let errorMessage = "Error al actualizar el estado";
       
       if (axios.isAxiosError(error)) {
-        // Handle Axios-specific errors
+        // Server responded with error status
         if (error.response) {
+          console.error("Server error response:", error.response.data); // Debug log
           errorMessage = error.response.data.message || 
-                        `Error ${error.response.status}: ${error.response.statusText}`;
-        } else if (error.request) {
-          errorMessage = "No se recibió respuesta del servidor";
-        } else {
+                       `Error ${error.response.status}: ${error.response.statusText}`;
+        } 
+        // No response received
+        else if (error.request) {
+          console.error("No response received:", error.request); // Debug log
+          errorMessage = "El servidor no respondió";
+        }
+        // Request setup error
+        else {
+          console.error("Request setup error:", error.message); // Debug log
           errorMessage = `Error de configuración: ${error.message}`;
         }
-      } else if (error instanceof Error) {
+      }
+      // Non-Axios error
+      else if (error instanceof Error) {
         errorMessage = error.message;
       }
   
-      console.error("Error actualizando negociación:", error);
       setError(errorMessage);
       
-      // Revert the UI to previous state
-      setNegociaciones(prev => [...prev]);
+      // Show error for 5 seconds then auto-dismiss
+      setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(prev => ({...prev, drag: false}));
       setDraggedItem(null);
