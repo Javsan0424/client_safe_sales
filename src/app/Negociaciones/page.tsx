@@ -80,42 +80,70 @@ export default function Negociaciones() {
   const handleDrop = async (e: React.DragEvent, newStatus: Negociacion["Estatus"]) => {
     e.preventDefault();
     if (!draggedItem) return;
-
+  
+    // Don't update if status hasn't changed
     if (draggedItem.Estatus === newStatus) {
       setDraggedItem(null);
       return;
     }
-
-    const updatedNegociacion: Negociacion = {
-      ...draggedItem,
-      Estatus: newStatus,
+  
+    // Prepare the updated negotiation data
+    const updateData = {
+      Cliente_ID: draggedItem.Cliente_ID,
+      Fecha_Inicio: draggedItem.Fecha_Inicio,
       Fecha_Cierre: ["Terminado", "Cancelado"].includes(newStatus) 
-        ? new Date().toISOString().split("T")[0] 
-        : null
+        ? new Date().toISOString() 
+        : null,
+      Estatus: newStatus
     };
-
+  
     setLoading(prev => ({...prev, drag: true}));
+    
     try {
       const response = await axios.put(
         `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
-        updatedNegociacion
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
-      
-      if (response.data?.success) {
+  
+      if (response.data.success) {
+        // Update local state only after successful API response
         setNegociaciones(prev => 
           prev.map(n => 
             n.ID_Negociaciones === draggedItem.ID_Negociaciones 
-              ? updatedNegociacion 
+              ? { ...n, ...updateData }
               : n
           )
         );
-        setError(null);
       } else {
-        throw new Error(response.data?.message || "Error al actualizar");
+        throw new Error(response.data.message || "Error en la respuesta del servidor");
       }
     } catch (error) {
-      console.error("Update error:", error);
-      setError(`Error: ${error instanceof Error ? error.message : "Ocurrió un error"}`);
+      let errorMessage = "Error al actualizar el estado";
+      
+      if (axios.isAxiosError(error)) {
+        // Handle Axios-specific errors
+        if (error.response) {
+          errorMessage = error.response.data.message || 
+                        `Error ${error.response.status}: ${error.response.statusText}`;
+        } else if (error.request) {
+          errorMessage = "No se recibió respuesta del servidor";
+        } else {
+          errorMessage = `Error de configuración: ${error.message}`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+  
+      console.error("Error actualizando negociación:", error);
+      setError(errorMessage);
+      
+      // Revert the UI to previous state
+      setNegociaciones(prev => [...prev]);
     } finally {
       setLoading(prev => ({...prev, drag: false}));
       setDraggedItem(null);
