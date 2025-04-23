@@ -98,7 +98,6 @@ export default function Ventas() {
             return;
         }
     
-        // Prepare payload with proper typing
         const payload: Partial<Venta> = {
             Cliente_ID: Number(currentVenta.Cliente_ID),
             Producto_ID: Number(currentVenta.Producto_ID),
@@ -128,7 +127,7 @@ export default function Ventas() {
                 : await axios.post(url, payload, config);
     
             setShowModal(false);
-            fetchVentas(); // Refresh the list
+            fetchVentas();
         } catch (error) {
             let errorMessage = "Error processing sale";
             
@@ -136,7 +135,6 @@ export default function Ventas() {
                 console.error("Full error response:", error.response);
                 
                 if (error.response) {
-                    // Try to get the most specific error message
                     errorMessage = error.response.data?.message || 
                                   error.response.data?.errorDetails?.sqlMessage || 
                                   error.response.data?.detail || 
