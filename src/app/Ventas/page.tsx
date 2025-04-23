@@ -98,47 +98,49 @@ export default function Ventas() {
             return;
         }
     
-        const payload = {
+        // Prepare payload with proper typing
+        const payload: Partial<Venta> = {
             Cliente_ID: Number(currentVenta.Cliente_ID),
             Producto_ID: Number(currentVenta.Producto_ID),
-            Comision: currentVenta.Comision != null
-                ? typeof currentVenta.Comision === 'string'
-                    ? parseFloat(currentVenta.Comision)
-                    : currentVenta.Comision
-                : 0,
-            Fecha: currentVenta.Fecha
-                ? new Date(currentVenta.Fecha).toISOString().split('T')[0]
-                : new Date().toISOString().split('T')[0],
+            Comision: currentVenta.Comision ? Number(currentVenta.Comision) : 0,
+            Fecha: currentVenta.Fecha || new Date().toISOString().split('T')[0],
             Metodo_pago: currentVenta.Metodo_pago || 'Efectivo',
             Estado_pago: currentVenta.Estado_pago || 'Pendiente',
-            Total: Math.round(Number(currentVenta.Total))
+            Total: Number(currentVenta.Total)
         };
-        
     
         setIsLoading(true);
+        setError(null);
+        
         try {
+            const url = `https://serversafesales-production.up.railway.app/api/ventas${
+                isEditing && currentVenta.Ventas_ID ? `/${currentVenta.Ventas_ID}` : ''
+            }`;
+            
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+    
             const response = isEditing && currentVenta.Ventas_ID
-                ? await axios.put(`https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`, payload)
-                : await axios.post('https://serversafesales-production.up.railway.app/api/ventas', payload);
+                ? await axios.put(url, payload, config)
+                : await axios.post(url, payload, config);
     
             setShowModal(false);
-            setError(null);
-            fetchVentas();
+            fetchVentas(); // Refresh the list
         } catch (error) {
             let errorMessage = "Error processing sale";
             
             if (axios.isAxiosError(error)) {
-                if (error.response?.data?.detail) {
-                    errorMessage = error.response.data.detail;
-                } 
-                else if (error.response?.data?.message) {
-                    errorMessage = error.response.data.message;
-                }
-                else if (error.response?.data?.errorDetails?.message) {
-                    errorMessage = `Database error: ${error.response.data.errorDetails.message}`;
-                }
-                else if (error.message) {
-                    errorMessage = error.message;
+                console.error("Full error response:", error.response);
+                
+                if (error.response) {
+                    // Try to get the most specific error message
+                    errorMessage = error.response.data?.message || 
+                                  error.response.data?.errorDetails?.sqlMessage || 
+                                  error.response.data?.detail || 
+                                  error.message;
                 }
             }
             
