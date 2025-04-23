@@ -81,89 +81,49 @@ export default function Negociaciones() {
     e.preventDefault();
     if (!draggedItem) return;
   
-    // Early return if status hasn't changed
     if (draggedItem.Estatus === newStatus) {
-      setDraggedItem(null);
-      return;
+        setDraggedItem(null);
+        return;
     }
-  
-    // Prepare the update payload
-    const payload = {
-      ID_Negociaciones: draggedItem.ID_Negociaciones,
-      Cliente_ID: draggedItem.Cliente_ID,
-      Fecha_Inicio: draggedItem.Fecha_Inicio,
-      Fecha_Cierre: ["Terminado", "Cancelado"].includes(newStatus) 
-        ? new Date().toISOString() 
-        : null,
-      Estatus: newStatus
-    };
-  
-    console.log("Sending update payload:", payload); // Debug log
   
     setLoading(prev => ({...prev, drag: true}));
   
     try {
-      const response = await axios.put(
-        `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        }
-      );
-  
-      console.log("Update response:", response.data); // Debug log
-  
-      if (response.data && response.data.success) {
-        setNegociaciones(prev => 
-          prev.map(n => 
-            n.ID_Negociaciones === draggedItem.ID_Negociaciones 
-              ? { ...n, ...payload }
-              : n
-          )
+        const response = await axios.put(
+            `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
+            { Estatus: newStatus }, // Simplified payload
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            }
         );
-      } else {
-        throw new Error(response.data?.message || "Invalid server response");
-      }
-    } catch (error) {
-      console.error("Full error object:", error); // Debug log
-      
-      let errorMessage = "Error al actualizar el estado";
-      
-      if (axios.isAxiosError(error)) {
-        // Server responded with error status
-        if (error.response) {
-          console.error("Server error response:", error.response.data); // Debug log
-          errorMessage = error.response.data.message || 
-                       `Error ${error.response.status}: ${error.response.statusText}`;
-        } 
-        // No response received
-        else if (error.request) {
-          console.error("No response received:", error.request); // Debug log
-          errorMessage = "El servidor no respondió";
-        }
-        // Request setup error
-        else {
-          console.error("Request setup error:", error.message); // Debug log
-          errorMessage = `Error de configuración: ${error.message}`;
-        }
-      }
-      // Non-Axios error
-      else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
   
-      setError(errorMessage);
-      
-      // Show error for 5 seconds then auto-dismiss
-      setTimeout(() => setError(null), 5000);
+        if (response.data?.success) {
+            setNegociaciones(prev => 
+                prev.map(n => 
+                    n.ID_Negociaciones === draggedItem.ID_Negociaciones 
+                        ? { 
+                            ...n, 
+                            Estatus: newStatus,
+                            Fecha_Cierre: ["Terminado", "Cancelado"].includes(newStatus)
+                                ? new Date().toISOString()
+                                : null
+                        }
+                        : n
+                )
+            );
+        } else {
+            throw new Error(response.data?.message || "Invalid server response");
+        }
+    } catch (error) {
+        // ... (keep your existing error handling)
     } finally {
-      setLoading(prev => ({...prev, drag: false}));
-      setDraggedItem(null);
+        setLoading(prev => ({...prev, drag: false}));
+        setDraggedItem(null);
     }
-  };
+};
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
