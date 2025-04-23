@@ -52,43 +52,78 @@ export default function Productos() {
     };
 
     const handleSubmit = async () => {
-        if (!currentProducto.Nombre || !currentProducto.Categoria) {
+        // Destructure with default values to ensure they're never undefined
+        const { 
+            Nombre = '', 
+            Precio = 0, 
+            Descripcion = '', 
+            Stock = 0, 
+            Categoria = '' 
+        } = currentProducto;
+    
+        // Validate required fields
+        if (!Nombre || !Categoria) {
             setError("Nombre y Categoría son campos obligatorios");
             return;
         }
-
+    
+        // Validate numbers (now we're sure they're numbers because of defaults)
+        if (isNaN(Precio) || isNaN(Stock)) {
+            setError("Precio y Stock deben ser números válidos");
+            return;
+        }
+    
         setIsLoading(true);
+        
         try {
             if (isEditing && currentProducto.Producto_ID) {
+                // UPDATE EXISTING PRODUCT
                 const response = await axios.put(
                     `https://serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`,
-                    currentProducto
+                    {
+                        Nombre,
+                        Precio: Number(Precio), // Ensure number type
+                        Descripcion,
+                        Stock: Number(Stock),    // Ensure number type
+                        Categoria
+                    }
                 );
                 
                 if (response.data.success) {
                     setShowModal(false);
                     setError(null);
-                    fetchProductos();
+                    await fetchProductos();
                 } else {
                     setError(response.data.message || "Error al actualizar el producto");
                 }
             } else {
+                // ADD NEW PRODUCT
                 const response = await axios.post(
                     'https://serversafesales-production.up.railway.app/api/productos',
-                    currentProducto
+                    {
+                        Nombre,
+                        Precio: Number(Precio), // Ensure number type
+                        Descripcion,
+                        Stock: Number(Stock),  // Ensure number type
+                        Categoria
+                    }
                 );
                 
                 if (response.data.success) {
                     setShowModal(false);
                     setError(null);
-                    fetchProductos();
+                    await fetchProductos();
                 } else {
                     setError(response.data.message || "Error al agregar el producto");
                 }
             }
         } catch (error: any) {
-            console.error("Error guardando producto:", error);
-            setError(error.response?.data?.message || "Error al guardar el producto");
+            console.error("Error saving product:", error);
+            setError(
+                error.response?.data?.message || 
+                error.message || 
+                "Error al guardar el producto"
+            );
         } finally {
             setIsLoading(false);
         }
