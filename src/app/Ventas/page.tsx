@@ -106,11 +106,14 @@ export default function Ventas() {
                     ? parseFloat(currentVenta.Comision)
                     : currentVenta.Comision
                 : 0,
-            Fecha: currentVenta.Fecha || new Date().toISOString().split('T')[0],
+            Fecha: currentVenta.Fecha
+                ? new Date(currentVenta.Fecha).toISOString().split('T')[0]
+                : new Date().toISOString().split('T')[0],
             Metodo_pago: currentVenta.Metodo_pago || 'Efectivo',
             Estado_pago: currentVenta.Estado_pago || 'Pendiente',
             Total: Math.round(Number(currentVenta.Total))
         };
+        
     
         setIsLoading(true);
         try {
