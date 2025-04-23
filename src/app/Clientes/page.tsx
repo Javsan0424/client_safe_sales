@@ -99,20 +99,24 @@ export default function Clientes() {
         if (!window.confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
             return;
         }
-
+    
         setIsLoading(true);
+        setError(null);
+        
         try {
             const response = await axios.delete(`https://serversafesales-production.up.railway.app/api/clientes/${id}`);
             
-            if (response.status === 200) {
-                setClientes(clientes.filter(cliente => cliente.Cliente_ID !== id));
-                setError(null);
+            if (response.data.success) {
+                setClientes(prev => prev.filter(cliente => cliente.Cliente_ID !== id));
             } else {
                 throw new Error(response.data.message || "Error al eliminar el cliente");
             }
         } catch (error: any) {
             console.error("Error eliminando cliente:", error);
-            setError(error.response?.data?.message || "Error al eliminar el cliente");
+            const errorMessage = error.response?.data?.message || 
+                                error.message || 
+                                "Error al eliminar el cliente";
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
