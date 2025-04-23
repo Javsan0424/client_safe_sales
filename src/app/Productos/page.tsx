@@ -52,7 +52,6 @@ export default function Productos() {
     };
 
     const handleSubmit = async () => {
-        // Destructure with default values to ensure they're never undefined
         const { 
             Nombre = '', 
             Precio = 0, 
@@ -61,13 +60,13 @@ export default function Productos() {
             Categoria = '' 
         } = currentProducto;
     
-        // Validate required fields
+        
         if (!Nombre || !Categoria) {
             setError("Nombre y Categoría son campos obligatorios");
             return;
         }
     
-        // Validate numbers (now we're sure they're numbers because of defaults)
+        
         if (isNaN(Precio) || isNaN(Stock)) {
             setError("Precio y Stock deben ser números válidos");
             return;
@@ -77,14 +76,14 @@ export default function Productos() {
         
         try {
             if (isEditing && currentProducto.Producto_ID) {
-                // UPDATE EXISTING PRODUCT
+                
                 const response = await axios.put(
                     `https://serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`,
                     {
                         Nombre,
-                        Precio: Number(Precio), // Ensure number type
+                        Precio: Number(Precio), 
                         Descripcion,
-                        Stock: Number(Stock),    // Ensure number type
+                        Stock: Number(Stock),    
                         Categoria
                     }
                 );
@@ -97,14 +96,14 @@ export default function Productos() {
                     setError(response.data.message || "Error al actualizar el producto");
                 }
             } else {
-                // ADD NEW PRODUCT
+                
                 const response = await axios.post(
                     'https://serversafesales-production.up.railway.app/api/productos',
                     {
                         Nombre,
-                        Precio: Number(Precio), // Ensure number type
+                        Precio: Number(Precio), 
                         Descripcion,
-                        Stock: Number(Stock),  // Ensure number type
+                        Stock: Number(Stock),  
                         Categoria
                     }
                 );

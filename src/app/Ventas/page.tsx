@@ -97,20 +97,42 @@ export default function Ventas() {
             setError("Cliente, Producto y Total son campos obligatorios");
             return;
         }
-
+    
+       
+        const payload = {
+            ...currentVenta,
+            Comision: currentVenta.Comision ? Number(currentVenta.Comision) : 0,
+            Total: Number(currentVenta.Total)
+        };
+    
         setIsLoading(true);
         try {
             if (isEditing && currentVenta.Ventas_ID) {
-                await axios.put(`https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`, currentVenta);
+                console.log("Updating venta with payload:", payload);
+                const response = await axios.put(
+                    `https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`,
+                    payload
+                );
+                console.log("Update response:", response.data); 
             } else {
-                await axios.post('https://serversafesales-production.up.railway.app/api/ventas', currentVenta);
+                await axios.post('https://serversafesales-production.up.railway.app/api/ventas', payload);
             }
             setShowModal(false);
             setError(null);
             fetchVentas();
         } catch (error) {
             console.error("Error guardando venta:", error);
-            setError("Error al guardar la venta");
+            
+            let errorMessage = "Error al guardar la venta";
+            if (axios.isAxiosError(error)) {
+                if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.response?.data?.sqlError) {
+                    errorMessage += `: ${error.response.data.sqlError}`;
+                }
+            }
+            
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
