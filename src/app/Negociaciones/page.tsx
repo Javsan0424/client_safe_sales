@@ -91,7 +91,12 @@ export default function Negociaciones() {
     try {
         const response = await axios.put(
             `https://serversafesales-production.up.railway.app/api/negociaciones/${draggedItem.ID_Negociaciones}`,
-            { Estatus: newStatus }, // Simplified payload
+            { 
+                Estatus: newStatus,
+                
+                Cliente_ID: draggedItem.Cliente_ID,
+                Fecha_Inicio: draggedItem.Fecha_Inicio.split('T')[0] // Send date only
+            },
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -118,7 +123,19 @@ export default function Negociaciones() {
             throw new Error(response.data?.message || "Invalid server response");
         }
     } catch (error) {
-        // ... (keep your existing error handling)
+        console.error("Update error:", error);
+        let errorMessage = "Error al actualizar el estado";
+        
+        if (axios.isAxiosError(error)) {
+            if (error.response?.data?.sqlError) {
+                errorMessage += `: ${error.response.data.sqlError}`;
+            } else if (error.response?.data?.message) {
+                errorMessage += `: ${error.response.data.message}`;
+            }
+        }
+        
+        setError(errorMessage);
+        setTimeout(() => setError(null), 5000);
     } finally {
         setLoading(prev => ({...prev, drag: false}));
         setDraggedItem(null);
