@@ -94,46 +94,48 @@ export default function Ventas() {
 
     const handleSubmit = async () => {
         if (!currentVenta.Cliente_ID || !currentVenta.Producto_ID || !currentVenta.Total) {
-            setError("Cliente, Producto y Total son campos obligatorios");
+            setError("Client, Product and Total are required fields");
             return;
         }
     
-        
         const payload = {
             Cliente_ID: Number(currentVenta.Cliente_ID),
             Producto_ID: Number(currentVenta.Producto_ID),
-            Comision: currentVenta.Comision ? Number(currentVenta.Comision) : 0,
+            Comision: currentVenta.Comision != null
+                ? typeof currentVenta.Comision === 'string'
+                    ? parseFloat(currentVenta.Comision)
+                    : currentVenta.Comision
+                : 0,
             Fecha: currentVenta.Fecha || new Date().toISOString().split('T')[0],
             Metodo_pago: currentVenta.Metodo_pago || 'Efectivo',
             Estado_pago: currentVenta.Estado_pago || 'Pendiente',
-            Total: Number(currentVenta.Total)
+            Total: Math.round(Number(currentVenta.Total))
         };
     
         setIsLoading(true);
         try {
-            if (isEditing && currentVenta.Ventas_ID) {
-                const response = await axios.put(
-                    `https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`,
-                    payload
-                );
-                console.log("Update successful:", response.data);
-            } else {
-                await axios.post('https://serversafesales-production.up.railway.app/api/ventas', payload);
-            }
+            const response = isEditing && currentVenta.Ventas_ID
+                ? await axios.put(`https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`, payload)
+                : await axios.post('https://serversafesales-production.up.railway.app/api/ventas', payload);
+    
             setShowModal(false);
             setError(null);
             fetchVentas();
         } catch (error) {
-            console.error("Error saving venta:", error);
+            let errorMessage = "Error processing sale";
             
-            let errorMessage = "Error al guardar la venta";
             if (axios.isAxiosError(error)) {
-                if (error.response?.data?.message) {
+                if (error.response?.data?.detail) {
+                    errorMessage = error.response.data.detail;
+                } 
+                else if (error.response?.data?.message) {
                     errorMessage = error.response.data.message;
-                } else if (error.response?.data?.sqlError) {
-                    errorMessage += `: ${error.response.data.sqlError}`;
-                } else if (error.response?.data) {
-                    errorMessage += `: ${JSON.stringify(error.response.data)}`;
+                }
+                else if (error.response?.data?.errorDetails?.message) {
+                    errorMessage = `Database error: ${error.response.data.errorDetails.message}`;
+                }
+                else if (error.message) {
+                    errorMessage = error.message;
                 }
             }
             
@@ -142,6 +144,7 @@ export default function Ventas() {
             setIsLoading(false);
         }
     };
+    
 
     const handleDelete = async (id: number) => {
         if (!window.confirm("¿Estás seguro de que deseas eliminar esta venta?")) {
