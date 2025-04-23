@@ -29,7 +29,7 @@ export default function Productos() {
         try {
             const response = await axios.get('https://serversafesales-production.up.railway.app/api/productos');
             
-            if (Array.isArray(response.data)) {
+            if (response.data && Array.isArray(response.data)) {
                 setProductos(response.data);
             } else {
                 console.error("Formato de datos inesperado:", response.data);
@@ -60,16 +60,35 @@ export default function Productos() {
         setIsLoading(true);
         try {
             if (isEditing && currentProducto.Producto_ID) {
-                await axios.put(`https://serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`, currentProducto);
+                const response = await axios.put(
+                    `https://serversafesales-production.up.railway.app/api/productos/${currentProducto.Producto_ID}`,
+                    currentProducto
+                );
+                
+                if (response.data.success) {
+                    setShowModal(false);
+                    setError(null);
+                    fetchProductos();
+                } else {
+                    setError(response.data.message || "Error al actualizar el producto");
+                }
             } else {
-                await axios.post('https://serversafesales-production.up.railway.app/api/productos', currentProducto);
+                const response = await axios.post(
+                    'https://serversafesales-production.up.railway.app/api/productos',
+                    currentProducto
+                );
+                
+                if (response.data.success) {
+                    setShowModal(false);
+                    setError(null);
+                    fetchProductos();
+                } else {
+                    setError(response.data.message || "Error al agregar el producto");
+                }
             }
-            setShowModal(false);
-            setError(null);
-            fetchProductos();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error guardando producto:", error);
-            setError("Error al guardar el producto");
+            setError(error.response?.data?.message || "Error al guardar el producto");
         } finally {
             setIsLoading(false);
         }
@@ -82,19 +101,26 @@ export default function Productos() {
 
         setIsLoading(true);
         try {
-            await axios.delete(`https://serversafesales-production.up.railway.app/api/productos/${id}`);
-            setProductos(productos.filter(producto => producto.Producto_ID !== id));
-            setError(null);
-        } catch (error) {
+            const response = await axios.delete(
+                `https://serversafesales-production.up.railway.app/api/productos/${id}`
+            );
+            
+            if (response.data.success) {
+                setProductos(productos.filter(producto => producto.Producto_ID !== id));
+                setError(null);
+            } else {
+                setError(response.data.message || "Error al eliminar el producto");
+            }
+        } catch (error: any) {
             console.error("Error eliminando producto:", error);
-            setError("Error al eliminar el producto. Puede que tenga ventas asociadas.");
+            setError(error.response?.data?.message || "Error al eliminar el producto");
         } finally {
             setIsLoading(false);
         }
     };
 
     const openEditModal = (producto: Producto) => {
-        setCurrentProducto(producto);
+        setCurrentProducto({ ...producto });
         setIsEditing(true);
         setShowModal(true);
     };
