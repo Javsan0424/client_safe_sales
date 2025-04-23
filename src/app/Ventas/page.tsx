@@ -98,22 +98,25 @@ export default function Ventas() {
             return;
         }
     
-       
+        
         const payload = {
-            ...currentVenta,
+            Cliente_ID: Number(currentVenta.Cliente_ID),
+            Producto_ID: Number(currentVenta.Producto_ID),
             Comision: currentVenta.Comision ? Number(currentVenta.Comision) : 0,
+            Fecha: currentVenta.Fecha || new Date().toISOString().split('T')[0],
+            Metodo_pago: currentVenta.Metodo_pago || 'Efectivo',
+            Estado_pago: currentVenta.Estado_pago || 'Pendiente',
             Total: Number(currentVenta.Total)
         };
     
         setIsLoading(true);
         try {
             if (isEditing && currentVenta.Ventas_ID) {
-                console.log("Updating venta with payload:", payload);
                 const response = await axios.put(
                     `https://serversafesales-production.up.railway.app/api/ventas/${currentVenta.Ventas_ID}`,
                     payload
                 );
-                console.log("Update response:", response.data); 
+                console.log("Update successful:", response.data);
             } else {
                 await axios.post('https://serversafesales-production.up.railway.app/api/ventas', payload);
             }
@@ -121,7 +124,7 @@ export default function Ventas() {
             setError(null);
             fetchVentas();
         } catch (error) {
-            console.error("Error guardando venta:", error);
+            console.error("Error saving venta:", error);
             
             let errorMessage = "Error al guardar la venta";
             if (axios.isAxiosError(error)) {
@@ -129,6 +132,8 @@ export default function Ventas() {
                     errorMessage = error.response.data.message;
                 } else if (error.response?.data?.sqlError) {
                     errorMessage += `: ${error.response.data.sqlError}`;
+                } else if (error.response?.data) {
+                    errorMessage += `: ${JSON.stringify(error.response.data)}`;
                 }
             }
             
