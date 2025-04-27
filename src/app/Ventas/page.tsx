@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Menu from "../Components/navegar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function Ventas() {
     type Venta = {
@@ -13,6 +14,7 @@ export default function Ventas() {
         Metodo_pago: 'Efectivo' | 'Tarjeta';
         Estado_pago: 'Pendiente' | 'Pagado';
         Total: number;
+        Vendedor_ID?: number;
     }
 
     type Cliente = {
@@ -26,9 +28,22 @@ export default function Ventas() {
         Precio: number;
     }
 
+    type Vendedor = {
+        Vendedor_ID: number;
+        Nombre: string;
+    }
+
+    type VentasPorVendedor = {
+        vendedor: string;
+        ventas: number;
+        comisiones: number;
+    }
+
     const [ventas, setVentas] = useState<Venta[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [productos, setProductos] = useState<Producto[]>([]);
+    const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+    const [ventasPorVendedor, setVentasPorVendedor] = useState<VentasPorVendedor[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [currentVenta, setCurrentVenta] = useState<Partial<Venta>>({
         Fecha: new Date().toISOString().split('T')[0],
@@ -43,7 +58,41 @@ export default function Ventas() {
         fetchVentas();
         fetchClientes();
         fetchProductos();
+        fetchVendedores();
     }, []);
+
+    useEffect(() => {
+        if (ventas.length > 0 && vendedores.length > 0) {
+            calcularVentasPorVendedor();
+        }
+    }, [ventas, vendedores]);
+
+    const calcularVentasPorVendedor = () => {
+        const ventasAgrupadas: Record<number, { ventas: number, comisiones: number }> = {};
+
+        ventas.forEach(venta => {
+            if (venta.Vendedor_ID) {
+                if (!ventasAgrupadas[venta.Vendedor_ID]) {
+                    ventasAgrupadas[venta.Vendedor_ID] = { ventas: 0, comisiones: 0 };
+                }
+                ventasAgrupadas[venta.Vendedor_ID].ventas += venta.Total;
+                ventasAgrupadas[venta.Vendedor_ID].comisiones += venta.Comision;
+            }
+        });
+
+        const datosGrafico = Object.keys(ventasAgrupadas).map(vendedorId => {
+            const id = parseInt(vendedorId);
+            const vendedor = vendedores.find(v => v.Vendedor_ID === id);
+            return {
+                vendedor: vendedor ? vendedor.Nombre : `Vendedor ${id}`,
+                ventas: ventasAgrupadas[id].ventas,
+                comisiones: ventasAgrupadas[id].comisiones
+            };
+        });
+
+        datosGrafico.sort((a, b) => b.ventas - a.ventas);
+        setVentasPorVendedor(datosGrafico);
+    };
 
     const fetchVentas = async () => {
         setIsLoading(true);
@@ -79,6 +128,15 @@ export default function Ventas() {
             setProductos(response.data);
         } catch (error) {
             console.error("Error obteniendo productos:", error);
+        }
+    };
+
+    const fetchVendedores = async () => {
+        try {
+            const response = await axios.get('https://serversafesales-production.up.railway.app/api/vendedores');
+            setVendedores(response.data);
+        } catch (error) {
+            console.error("Error obteniendo vendedores:", error);
         }
     };
 
@@ -147,7 +205,6 @@ export default function Ventas() {
             setIsLoading(false);
         }
     };
-    
 
     const handleDelete = async (id: number) => {
         if (!window.confirm("¿Estás seguro de que deseas eliminar esta venta?")) {
@@ -222,6 +279,54 @@ export default function Ventas() {
                         </button>
                     </div>
                 )}
+
+                {/* Sección del gráfico */}
+                <div className="mb-8 bg-white p-6 rounded-lg shadow">
+                    <h2 className="text-2xl font-bold mb-4">Ventas por Vendedor</h2>
+                    <div className="h-80">
+                        {ventasPorVendedor.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={ventasPorVendedor}
+                                    margin={{
+                                        top: 20,
+                                        right: 30,
+                                        left: 20,
+                                        bottom: 60,
+                                    }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis 
+                                        dataKey="vendedor" 
+                                        angle={-45} 
+                                        textAnchor="end" 
+                                        height={70}
+                                    />
+                                    <YAxis />
+                                    <Tooltip 
+                                        formatter={(value:any) => [`$${value.toLocaleString()}`, value === 'ventas' ? 'Ventas' : 'Comisiones']}
+                                        labelFormatter={(label:any) => `Vendedor: ${label}`}
+                                    />
+                                    <Legend />
+                                    <Bar 
+                                        dataKey="ventas" 
+                                        name="Ventas Totales" 
+                                        fill="#8884d8" 
+                                    />
+                                    <Bar 
+                                        dataKey="comisiones" 
+                                        name="Comisiones" 
+                                        fill="#82ca9d" 
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex justify-center items-center h-full">
+                                <p>No hay datos suficientes para mostrar el gráfico</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64">
