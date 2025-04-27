@@ -226,23 +226,63 @@ export default function Ventas() {
                 </div>
 
                 {chartData.length > 0 && (
-                    <div className="mb-10 bg-white p-6 rounded-lg shadow-lg">
-                        <h2 className="text-3xl mb-5">Ventas por Cliente</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="nombre" />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
-                                <Bar dataKey="ventas" fill="#3182CE">
-                                    <LabelList dataKey="nombre" position="top" />
-                                    <LabelList dataKey="ventas" position="top" />
-                                    <LabelList dataKey="totalGenerado" position="top" />
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
+        <div className="mb-10 bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-3xl mb-5">Ventas por Cliente</h2>
+            <ResponsiveContainer width="100%" height={400}>
+                <BarChart 
+                    data={chartData}
+                    margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 60,
+                    }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                        dataKey="nombre" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={70}
+                    />
+                    <YAxis />
+                    <Tooltip 
+                        formatter={(value, name) => {
+                            if (name === 'Número de Ventas') {
+                                return [value, name];
+                            } else if (name === 'Total Generado') {
+                                return [`$${value.toLocaleString()}`, name];
+                            }
+                            return [value, name];
+                        }}
+                    />
+                    
+                    <Bar 
+                        dataKey="ventas" 
+                        name="Número de Ventas" 
+                        fill="#3182CE"
+                    >
+                        <LabelList 
+                            dataKey="ventas" 
+                            position="top" 
+                            formatter={(value:any) => `${value}`}
+                        />
+                    </Bar>
+                    <Bar 
+                        dataKey="totalGenerado" 
+                        name="Total Generado" 
+                        fill="#38A169"
+                    >
+                        <LabelList 
+                            dataKey="totalGenerado" 
+                            position="top" 
+                            formatter={(value:any) => `$${value.toFixed(2)}`}
+                        />
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    )}
 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
