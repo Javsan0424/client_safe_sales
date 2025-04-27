@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Menu from "../Components/navegar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+
 
 export default function Productos() {
     type Producto = {
@@ -171,6 +173,22 @@ export default function Productos() {
         setShowModal(true);
     };
 
+
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="bg-white p-4 border border-gray-300 rounded shadow-md">
+                    <p className="font-bold">{label}</p>
+                    <p>Stock disponible: {data.Stock}</p>
+                    <p>Precio: ${data.Precio.toFixed(2)}</p>
+                </div>
+            );
+        }
+        return null;
+    };
+    
+
     return (
         <div className="h-screen flex">
             <Menu />
@@ -184,6 +202,24 @@ export default function Productos() {
                         Agregar Producto
                     </button>
                 </div>
+
+                {productos.length > 0 && (
+                    <div className="mb-10 bg-white p-6 rounded-lg shadow-lg">
+                        <h2 className="text-3xl mb-5">Stock de Productos</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={productos}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="Nombre" />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Bar dataKey="Stock" fill="#38B2AC">
+                                    <LabelList dataKey="Stock" position="top" />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+
 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
