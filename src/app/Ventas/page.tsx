@@ -199,12 +199,17 @@ export default function Ventas() {
     };
 
     const chartData = clientes.map(cliente => {
-        const ventasCliente = ventas.filter(v => v.Cliente_ID === cliente.Cliente_ID).length;
+        const ventasCliente = ventas.filter(v => v.Cliente_ID === cliente.Cliente_ID);
+        const cantidadVentas = ventasCliente.length;
+        const totalGenerado = ventasCliente.reduce((sum, venta) => sum + venta.Total, 0);
+    
         return {
             nombre: cliente.Nombre,
-            ventas: ventasCliente
+            ventas: cantidadVentas,
+            totalGenerado: totalGenerado
         };
     }).filter(data => data.ventas > 0);
+    
 
     return (
         <div className="h-screen flex">
@@ -305,7 +310,6 @@ export default function Ventas() {
                     </div>
                 )}
 
-                {/* Modal */}
                 {showModal && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                         <div className="bg-white p-8 rounded shadow-lg w-full max-w-md">
