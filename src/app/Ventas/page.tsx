@@ -235,7 +235,9 @@ export default function Ventas() {
                                 <YAxis allowDecimals={false} />
                                 <Tooltip />
                                 <Bar dataKey="ventas" fill="#3182CE">
+                                    <LabelList dataKey="nombre" position="top" />
                                     <LabelList dataKey="ventas" position="top" />
+                                    <LabelList dataKey="totalGenerado" position="top" />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
