@@ -2,7 +2,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Menu from "../Components/navegar";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LabelList
+} from 'recharts';
 
 export default function Ventas() {
     type Venta = {
@@ -14,7 +16,6 @@ export default function Ventas() {
         Metodo_pago: 'Efectivo' | 'Tarjeta';
         Estado_pago: 'Pendiente' | 'Pagado';
         Total: number;
-        Vendedor_ID?: number;
     }
 
     type Cliente = {
@@ -28,22 +29,9 @@ export default function Ventas() {
         Precio: number;
     }
 
-    type Vendedor = {
-        Vendedor_ID: number;
-        Nombre: string;
-    }
-
-    type VentasPorVendedor = {
-        vendedor: string;
-        ventas: number;
-        comisiones: number;
-    }
-
     const [ventas, setVentas] = useState<Venta[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [productos, setProductos] = useState<Producto[]>([]);
-    const [vendedores, setVendedores] = useState<Vendedor[]>([]);
-    const [ventasPorVendedor, setVentasPorVendedor] = useState<VentasPorVendedor[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [currentVenta, setCurrentVenta] = useState<Partial<Venta>>({
         Fecha: new Date().toISOString().split('T')[0],
@@ -58,47 +46,12 @@ export default function Ventas() {
         fetchVentas();
         fetchClientes();
         fetchProductos();
-        fetchVendedores();
     }, []);
-
-    useEffect(() => {
-        if (ventas.length > 0 && vendedores.length > 0) {
-            calcularVentasPorVendedor();
-        }
-    }, [ventas, vendedores]);
-
-    const calcularVentasPorVendedor = () => {
-        const ventasAgrupadas: Record<number, { ventas: number, comisiones: number }> = {};
-
-        ventas.forEach(venta => {
-            if (venta.Vendedor_ID) {
-                if (!ventasAgrupadas[venta.Vendedor_ID]) {
-                    ventasAgrupadas[venta.Vendedor_ID] = { ventas: 0, comisiones: 0 };
-                }
-                ventasAgrupadas[venta.Vendedor_ID].ventas += venta.Total;
-                ventasAgrupadas[venta.Vendedor_ID].comisiones += venta.Comision;
-            }
-        });
-
-        const datosGrafico = Object.keys(ventasAgrupadas).map(vendedorId => {
-            const id = parseInt(vendedorId);
-            const vendedor = vendedores.find(v => v.Vendedor_ID === id);
-            return {
-                vendedor: vendedor ? vendedor.Nombre : `Vendedor ${id}`,
-                ventas: ventasAgrupadas[id].ventas,
-                comisiones: ventasAgrupadas[id].comisiones
-            };
-        });
-
-        datosGrafico.sort((a, b) => b.ventas - a.ventas);
-        setVentasPorVendedor(datosGrafico);
-    };
 
     const fetchVentas = async () => {
         setIsLoading(true);
         try {
             const response = await axios.get('https://serversafesales-production.up.railway.app/api/ventas');
-            
             if (Array.isArray(response.data)) {
                 setVentas(response.data);
             } else {
@@ -131,15 +84,6 @@ export default function Ventas() {
         }
     };
 
-    const fetchVendedores = async () => {
-        try {
-            const response = await axios.get('https://serversafesales-production.up.railway.app/api/vendedores');
-            setVendedores(response.data);
-        } catch (error) {
-            console.error("Error obteniendo vendedores:", error);
-        }
-    };
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setCurrentVenta({
@@ -155,7 +99,7 @@ export default function Ventas() {
             setError("Client, Product and Total are required fields");
             return;
         }
-    
+
         const payload: Partial<Venta> = {
             Cliente_ID: Number(currentVenta.Cliente_ID),
             Producto_ID: Number(currentVenta.Producto_ID),
@@ -165,33 +109,33 @@ export default function Ventas() {
             Estado_pago: currentVenta.Estado_pago || 'Pendiente',
             Total: Number(currentVenta.Total)
         };
-    
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const url = `https://serversafesales-production.up.railway.app/api/ventas${
                 isEditing && currentVenta.Ventas_ID ? `/${currentVenta.Ventas_ID}` : ''
             }`;
-            
+
             const config = {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             };
-    
+
             const response = isEditing && currentVenta.Ventas_ID
                 ? await axios.put(url, payload, config)
                 : await axios.post(url, payload, config);
-    
+
             setShowModal(false);
             fetchVentas();
         } catch (error) {
             let errorMessage = "Error processing sale";
-            
+
             if (axios.isAxiosError(error)) {
                 console.error("Full error response:", error.response);
-                
+
                 if (error.response) {
                     errorMessage = error.response.data?.message || 
                                   error.response.data?.errorDetails?.sqlMessage || 
@@ -199,7 +143,7 @@ export default function Ventas() {
                                   error.message;
                 }
             }
-            
+
             setError(errorMessage);
         } finally {
             setIsLoading(false);
@@ -254,6 +198,14 @@ export default function Ventas() {
         return producto ? producto.Nombre : 'Producto no encontrado';
     };
 
+    const chartData = clientes.map(cliente => {
+        const ventasCliente = ventas.filter(v => v.Cliente_ID === cliente.Cliente_ID).length;
+        return {
+            nombre: cliente.Nombre,
+            ventas: ventasCliente
+        };
+    }).filter(data => data.ventas > 0);
+
     return (
         <div className="h-screen flex">
             <Menu />
@@ -268,6 +220,23 @@ export default function Ventas() {
                     </button>
                 </div>
 
+                {chartData.length > 0 && (
+                    <div className="mb-10 bg-white p-6 rounded-lg shadow-lg">
+                        <h2 className="text-3xl mb-5">Ventas por Cliente</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="nombre" />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip />
+                                <Bar dataKey="ventas" fill="#3182CE">
+                                    <LabelList dataKey="ventas" position="top" />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         {error}
@@ -279,54 +248,6 @@ export default function Ventas() {
                         </button>
                     </div>
                 )}
-
-                {/* Sección del gráfico */}
-                <div className="mb-8 bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-bold mb-4">Ventas por Vendedor</h2>
-                    <div className="h-80">
-                        {ventasPorVendedor.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={ventasPorVendedor}
-                                    margin={{
-                                        top: 20,
-                                        right: 30,
-                                        left: 20,
-                                        bottom: 60,
-                                    }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis 
-                                        dataKey="vendedor" 
-                                        angle={-45} 
-                                        textAnchor="end" 
-                                        height={70}
-                                    />
-                                    <YAxis />
-                                    <Tooltip 
-                                        formatter={(value:any) => [`$${value.toLocaleString()}`, value === 'ventas' ? 'Ventas' : 'Comisiones']}
-                                        labelFormatter={(label:any) => `Vendedor: ${label}`}
-                                    />
-                                    <Legend />
-                                    <Bar 
-                                        dataKey="ventas" 
-                                        name="Ventas Totales" 
-                                        fill="#8884d8" 
-                                    />
-                                    <Bar 
-                                        dataKey="comisiones" 
-                                        name="Comisiones" 
-                                        fill="#82ca9d" 
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="flex justify-center items-center h-full">
-                                <p>No hay datos suficientes para mostrar el gráfico</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
 
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64">
@@ -384,117 +305,88 @@ export default function Ventas() {
                     </div>
                 )}
 
+                {/* Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                            <h2 className="text-2xl font-bold mb-4">
-                                {isEditing ? 'Editar Venta' : 'Registrar Nueva Venta'}
-                            </h2>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Cliente*</label>
+                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                        <div className="bg-white p-8 rounded shadow-lg w-full max-w-md">
+                            <h2 className="text-2xl font-bold mb-4">{isEditing ? 'Editar Venta' : 'Registrar Venta'}</h2>
+                            <div className="space-y-4">
                                 <select
                                     name="Cliente_ID"
-                                    value={currentVenta.Cliente_ID || 0}
+                                    value={currentVenta.Cliente_ID || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 >
-                                    <option value="0">Seleccione un cliente</option>
+                                    <option value="">Seleccionar Cliente</option>
                                     {clientes.map(cliente => (
                                         <option key={cliente.Cliente_ID} value={cliente.Cliente_ID}>
                                             {cliente.Nombre}
                                         </option>
                                     ))}
                                 </select>
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Producto*</label>
+
                                 <select
                                     name="Producto_ID"
-                                    value={currentVenta.Producto_ID || 0}
+                                    value={currentVenta.Producto_ID || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 >
-                                    <option value="0">Seleccione un producto</option>
+                                    <option value="">Seleccionar Producto</option>
                                     {productos.map(producto => (
                                         <option key={producto.Producto_ID} value={producto.Producto_ID}>
-                                            {producto.Nombre} (${producto.Precio.toFixed(2)})
+                                            {producto.Nombre}
                                         </option>
                                     ))}
                                 </select>
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Fecha*</label>
+
+                                <input
+                                    type="number"
+                                    name="Comision"
+                                    placeholder="Comisión"
+                                    value={currentVenta.Comision || ''}
+                                    onChange={handleInputChange}
+                                    className="w-full p-2 border rounded"
+                                />
+
                                 <input
                                     type="date"
                                     name="Fecha"
                                     value={currentVenta.Fecha || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 />
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Método de Pago*</label>
+
                                 <select
                                     name="Metodo_pago"
-                                    value={currentVenta.Metodo_pago || 'Efectivo'}
+                                    value={currentVenta.Metodo_pago || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 >
                                     <option value="Efectivo">Efectivo</option>
                                     <option value="Tarjeta">Tarjeta</option>
                                 </select>
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Estado*</label>
+
                                 <select
                                     name="Estado_pago"
-                                    value={currentVenta.Estado_pago || 'Pendiente'}
+                                    value={currentVenta.Estado_pago || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 >
                                     <option value="Pendiente">Pendiente</option>
                                     <option value="Pagado">Pagado</option>
                                 </select>
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Total*</label>
+
                                 <input
                                     type="number"
                                     name="Total"
-                                    value={currentVenta.Total || 0}
+                                    placeholder="Total"
+                                    value={currentVenta.Total || ''}
                                     onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    min="0"
-                                    step="0.01"
-                                    required
+                                    className="w-full p-2 border rounded"
                                 />
                             </div>
-                            
-                            <div className="mb-4">
-                                <label className="block text-gray-700 mb-2">Comisión</label>
-                                <input
-                                    type="number"
-                                    name="Comision"
-                                    value={currentVenta.Comision || 0}
-                                    onChange={handleInputChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    min="0"
-                                    step="0.01"
-                                />
-                            </div>
-                            
-                            <div className="flex justify-end space-x-2">
+
+                            <div className="flex justify-end space-x-2 mt-6">
                                 <button
                                     onClick={() => setShowModal(false)}
                                     className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
@@ -503,10 +395,9 @@ export default function Ventas() {
                                 </button>
                                 <button
                                     onClick={handleSubmit}
-                                    disabled={isLoading}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                                 >
-                                    {isLoading ? 'Guardando...' : 'Guardar'}
+                                    {isEditing ? 'Actualizar' : 'Registrar'}
                                 </button>
                             </div>
                         </div>
