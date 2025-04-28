@@ -13,7 +13,7 @@ export default function Juego() {
             <main className="flex-1 p-10 overflow-auto">
                 <div className="text-5xl mb-4">Juego</div>
                 <iframe
-                    src="https://github.com/ManuelPerezF/CRM"
+                    src="https://manuelperezf.github.io/CRM/"
                     width="100%"
                     height="650px"
                     className="border rounded-xl"
