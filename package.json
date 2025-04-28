@@ -13,11 +13,13 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "@types/styled-jsx": "^2.2.9",
     "axios": "^1.8.4",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^2.15.3"
+    "recharts": "^2.15.3",
+    "styled-jsx": "^5.1.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
