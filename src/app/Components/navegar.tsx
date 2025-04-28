@@ -5,7 +5,7 @@ export default function Menu() {
         <div className="bg-gray-300 w-50 h-screen shadow-lg shadow-black">
             <div className="mt-10 ml-8">
                 <ol className="space-y-18">
-                    <div><img src="src\app\SafeSales Logo.jpg" alt="Processed Image" style={{ mixBlendMode: 'multiply' }} /></div>
+                    <div><img src="public\SafeSales Logo.jpg" alt="Processed Image" style={{ mixBlendMode: 'multiply' }} /></div>
                     <div><Link href={"/Page1"} className="text-blue-500 hover:underline">Tablero</Link></div>
                     <div><Link href={"/Empresas"} className="text-blue-500 hover:underline">Empresas</Link></div>
                     <div><Link href={"/Clientes"} className="text-blue-500 hover:underline">Clientes</Link></div>
